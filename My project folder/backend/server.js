@@ -1,26 +1,42 @@
+// server.js
 const express = require("express");
+const mysql = require("mysql");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 
 const app = express();
-const PORT = 5000;
-
-// Middlewares
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// Sample login route
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
+// connect MySQL
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "", // your MySQL password
+  database: "react", // your database name
+});
 
-  // Dummy login logic
-  if (username === "admin" && password === "1234") {
-    res.json({ success: true, message: "Login successful!" });
+// connect check
+db.connect((err) => {
+  if (err) {
+    console.log("❌ Database connection failed:", err);
   } else {
-    res.status(401).json({ success: false, message: "Invalid credentials" });
+    console.log("✅ Connected to MySQL");
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// route to insert
+app.post("/register", (req, res) => {
+  const { username, email, password } = req.body;
+  const sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+  db.query(sql, [username, email, password], (err, result) => {
+    if (err) {
+      console.error("❌ MySQL Error:", err);
+      return res.status(500).json({ message: "Error inserting user" });
+    }
+    return res.json({ message: "User inserted successfully!" });
+  });
+});
+
+app.listen(5000, () => {
+  console.log("✅ Server running on port 5000");
 });
